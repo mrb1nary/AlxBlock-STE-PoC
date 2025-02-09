@@ -37,11 +37,31 @@ pub mod aixblock_contribution {
             monthly_pool
         };
 
+
+        //Naive and easy implementation to transfer tokens
+
         for contributor in contributors.iter_mut() {
             let reward = (contributor.total_points as u128 * distributed_pool as u128)
                 / total_points as u128;
             token::transfer(ctx.accounts.into_transfer_context(), reward as u64)?;
         }
+
+        
+
+        //Better approach would be to pre-compute everything at once hence saving time and CU
+        let mut precomputed_rewards = vec![];
+
+        for contributor in contributors.iter() {
+            let reward = (contributor.total_points as u128 * distributed_pool as u128)
+                / total_points as u128;
+            precomputed_rewards.push((contributor.wallet, reward as u64));
+        }
+
+        for (wallet, amount) in precomputed_rewards {
+            token::transfer(ctx.accounts.into_transfer_context(), amount)?;
+        }
+
+
         Ok(())
     }
 }
